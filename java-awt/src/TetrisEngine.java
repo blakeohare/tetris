@@ -1,3 +1,4 @@
+import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
@@ -12,6 +13,8 @@ public class TetrisEngine {
   private int overlayX = 3;
   private int overlayY = 0;
   private double fallCounter = 30;
+  private int linesCleared = 0;
+  private int level = 0;
 
   public TetrisEngine() {
     this.grid = new int[10][];
@@ -35,6 +38,7 @@ public class TetrisEngine {
       if (!valid) {
         this.flattenOverlay();
         this.overlay = null;
+        this.clearLineCheck();
       }
       this.fallCounter = 30;
     }
@@ -57,6 +61,44 @@ public class TetrisEngine {
           this.tryRotate(false);
           break;
       }
+    }
+  }
+
+  private void clearLineCheck() {
+    HashMap<Integer, Boolean> linesToKeep = new HashMap<>();
+    for (int y = 0; y < 20; ++y) {
+      boolean hasEmpty = false;
+      for (int x = 0; x < 10; ++x) {
+        if (this.grid[x][y] == 0) {
+          hasEmpty = true;
+          break;
+        }
+      }
+      if (hasEmpty) {
+        linesToKeep.put(y, true);
+      }
+    }
+
+    int clearedLines = 20 - linesToKeep.size();
+    if (clearedLines == 0) return;
+
+    this.linesCleared += clearedLines;
+    this.level = this.linesCleared / 10;
+
+    int actualLine = 19;
+    for (int y = 19; y >= 0; --y) {
+      if (linesToKeep.get(y) != null) {
+        for (int x = 0; x < 10; ++x) {
+          this.grid[x][actualLine] = this.grid[x][y];
+        }
+        actualLine--;
+      }
+    }
+    while (actualLine >= 0) {
+      for (int x = 0; x < 10; ++x) {
+        this.grid[x][actualLine] = 0;
+      }
+      actualLine--;
     }
   }
 
@@ -211,6 +253,33 @@ public class TetrisEngine {
     }
   }
 
+  private final int[] WHITE = new int[] { 255, 255, 255 };
+  private final int[] CERULEAN = new int[] { 0, 128, 255 };
+  private final int[] GREEN = new int[] { 0, 128, 50 };
+  private final int[] ORANGE = new int[] { 255, 128, 0 };
+  private final int[] YELLOW = new int[] { 255, 240, 0 };
+  private final int[] RED = new int[] { 255, 0, 30 };
+  private final int[] PURPLE = new int[] { 128, 0, 140 };
+  private final int[] MAGENTA = new int[] { 255, 40, 255 };
+  private final int[] BLUE = new int[] { 0, 0, 235 };
+
+  public int[][] getColors() {
+    int[][] colors = new int[4][];
+    colors[0] = null;
+    colors[1] = new int[] { 255, 255, 255 };
+    int[] colorA = null;
+    int[] colorB = null;
+    switch (this.level % 4) {
+      case 0: colorA = CERULEAN; colorB = GREEN; break;
+      case 1: colorA = ORANGE; colorB = YELLOW; break;
+      case 2: colorA = RED; colorB = PURPLE; break;
+      case 3: colorA = BLUE; colorB = MAGENTA; break;
+    }
+    colors[2] = colorA;
+    colors[3] = colorB;
+    return colors;
+  }
+
   public void render(GameRenderSurface canvas) {
     this.counter++;
     if (this.counter > 255) this.counter = 0;
@@ -223,15 +292,7 @@ public class TetrisEngine {
     int screenHeight = 600;
     int boardTop = (screenHeight - boardHeight) / 2;
 
-    int[] color1 = new int[] { 255, 255, 255 };
-    int[] color2 = new int[] { 0, 128, 255 };
-    int[] color3 = new int[] { 0, 128, 50 };
-    int[][] colors = new int[][] { 
-      null,
-      color1,
-      color2, 
-      color3,
-    };
+    int[][] colors = this.getColors();
 
     canvas
       .fill(40, 40, 40)
