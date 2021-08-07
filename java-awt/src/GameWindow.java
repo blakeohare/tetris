@@ -128,6 +128,12 @@ public abstract class GameWindow {
 
   private void handleKeyPress(int keyCode, boolean isPress) {
     String keyId = keyCodeToId(keyCode);
+
+    if (isPress && isPressed(keyId)) {
+      // don't want key-repeat events coming in as multiple press events
+      return;
+    }
+
     pressedKeys.put(keyId, isPress);
 
     // Ctrl + W should close the window, I suppose.
