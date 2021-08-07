@@ -322,6 +322,23 @@ public class TetrisEngine {
     }
     colors[2] = colorA;
     colors[3] = colorB;
+
+    for (int i = 1; i < 4; ++i) {
+      int[] colorsWithShades = new int[9];
+      int r = colors[i][0];
+      int g = colors[i][1];
+      int b = colors[i][2];
+      colorsWithShades[0] = r;
+      colorsWithShades[1] = g;
+      colorsWithShades[2] = b;
+      colorsWithShades[3] = 255 - (255 - r) * 2 / 3;
+      colorsWithShades[4] = 255 - (255 - g) * 2 / 3;
+      colorsWithShades[5] = 255 - (255 - b) * 2 / 3;
+      colorsWithShades[6] = r * 2 / 3;
+      colorsWithShades[7] = g * 2 / 3;
+      colorsWithShades[8] = b * 2 / 3;
+      colors[i] = colorsWithShades;
+    }
     return colors;
   }
 
@@ -345,6 +362,7 @@ public class TetrisEngine {
     
     int colorId;
     int[] color;
+    int left, top;
     for (int y = 0; y < 20; ++y) {
       for (int x = 0; x < 10; ++x) {
         colorId = this.grid[x][y];
@@ -357,7 +375,12 @@ public class TetrisEngine {
 
         if (colorId != 0) {
           color = colors[colorId];
-          canvas.rectangle(boardLeft + tileSize * x, boardTop + tileSize * y, tileSize, tileSize, color[0], color[1], color[2]);
+          left = boardLeft + tileSize * x;
+          top = boardTop + tileSize * y;
+          canvas.rectangle(left, top, tileSize, tileSize, color[6], color[7], color[8]);
+          canvas.rectangle(left, top, tileSize - 2, tileSize - 2, color[3], color[4], color[5]);
+          canvas.rectangle(left + 2, top + 2, tileSize - 4, tileSize - 4, color[0], color[1], color[2]);
+          
         }
       }
     }
