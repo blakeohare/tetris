@@ -127,6 +127,7 @@ public abstract class GameWindow {
   }
 
   private void handleKeyPress(int keyCode, boolean isPress) {
+
     String keyId = keyCodeToId(keyCode);
 
     if (isPress && isPressed(keyId)) {
@@ -146,7 +147,9 @@ public abstract class GameWindow {
   }
 
   private void timerTick() {
+
     this.update(this.events);
+    this.events.clear();
 
     this.canvas.startSession();
     this.render(this.canvas);
@@ -163,7 +166,6 @@ public abstract class GameWindow {
 			null);
     g.dispose();
     this.bufferStrategy.show();
-    this.events.clear();
   }
 
   public abstract void update(List<String> events);

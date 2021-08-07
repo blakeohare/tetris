@@ -243,7 +243,7 @@ public class TetrisEngine {
   private void createNewOverlay() {
     int pieceId = this.random.nextInt(7);
     int[] piece = getPiece(pieceId);
-    this.overlayUsesTranspose = pieceId <= 1 || pieceId == 4 || pieceId == 6;
+    this.overlayUsesTranspose = pieceId <= 1;
     this.overlay = new int[4][];
     for (int x = 0; x < 4; ++x) {
       this.overlay[x] = new int[4];
@@ -262,6 +262,11 @@ public class TetrisEngine {
   private final int[] PURPLE = new int[] { 128, 0, 140 };
   private final int[] MAGENTA = new int[] { 255, 40, 255 };
   private final int[] BLUE = new int[] { 0, 0, 235 };
+  private final int[] LIME = new int[] { 50, 255, 0 };
+  private final int[] BROWN = new int[] { 128, 64, 0 };
+  private final int[] TAN = new int[] { 200, 150, 100 };
+  private final int[] PINK = new int[] { 255, 180, 225 };
+  private final int[] CYAN = new int[] { 0, 255, 255 };
 
   public int[][] getColors() {
     int[][] colors = new int[4][];
@@ -269,11 +274,17 @@ public class TetrisEngine {
     colors[1] = new int[] { 255, 255, 255 };
     int[] colorA = null;
     int[] colorB = null;
-    switch (this.level % 4) {
+    switch (this.level % 10) {
       case 0: colorA = CERULEAN; colorB = GREEN; break;
       case 1: colorA = ORANGE; colorB = YELLOW; break;
       case 2: colorA = RED; colorB = PURPLE; break;
       case 3: colorA = BLUE; colorB = MAGENTA; break;
+      case 4: colorA = GREEN; colorB = LIME; break;
+      case 5: colorA = BROWN; colorB = TAN; break;
+      case 6: colorA = PINK; colorB = YELLOW; break;
+      case 7: colorA = GREEN; colorB = PURPLE; break;
+      case 8: colorA = BLUE; colorB = CYAN; break;
+      case 9: colorA = ORANGE; colorB = RED; break;
     }
     colors[2] = colorA;
     colors[3] = colorB;
