@@ -16,6 +16,9 @@ public class TetrisEngine {
   private int linesCleared = 0;
   private int level = 0;
 
+  private HashMap<Integer, Boolean> clearingLinesToKeep = null;
+  private int clearCounter = 0;
+
   public TetrisEngine() {
     this.grid = new int[10][];
     for (int x = 0; x < 10; ++x) {
@@ -24,6 +27,53 @@ public class TetrisEngine {
   }
 
   public void update(List<String> events) {
+
+    if (this.clearingLinesToKeep == null) {
+      this.generalUpdate(events);
+    } else {
+      this.updateForClear();
+    }
+  }
+
+  private final int CLEAR_COUNTER_MAX = 20;
+  private void updateForClear() {
+    if (this.clearCounter < CLEAR_COUNTER_MAX) {
+      int xMax = this.clearCounter * 10 / CLEAR_COUNTER_MAX;
+      for (int y = 0; y < 20; ++y) {
+        if (this.clearingLinesToKeep.get(y) == null) {
+          for (int x = 0; x < xMax; ++x) {
+            this.grid[x][y] = 0;
+          }
+        }
+      }
+      this.clearCounter++;
+    } else {
+      int actualLine = 19;
+      for (int y = 19; y >= 0; --y) {
+        if (this.clearingLinesToKeep.get(y) != null) {
+          for (int x = 0; x < 10; ++x) {
+            this.grid[x][actualLine] = this.grid[x][y];
+          }
+          actualLine--;
+        }
+      }
+      while (actualLine >= 0) {
+        for (int x = 0; x < 10; ++x) {
+          this.grid[x][actualLine] = 0;
+        }
+        actualLine--;
+      }
+
+      int clearedLines = 20 - this.clearingLinesToKeep.size();
+      this.linesCleared += clearedLines;
+      this.level = this.linesCleared / 10;
+      this.clearCounter = 0;
+      this.clearingLinesToKeep = null;
+    }
+  }
+
+  private void generalUpdate(List<String> events) {
+
     if (overlay == null) {
       this.createNewOverlay();
       this.overlayX = 3;
@@ -82,24 +132,8 @@ public class TetrisEngine {
     int clearedLines = 20 - linesToKeep.size();
     if (clearedLines == 0) return;
 
-    this.linesCleared += clearedLines;
-    this.level = this.linesCleared / 10;
-
-    int actualLine = 19;
-    for (int y = 19; y >= 0; --y) {
-      if (linesToKeep.get(y) != null) {
-        for (int x = 0; x < 10; ++x) {
-          this.grid[x][actualLine] = this.grid[x][y];
-        }
-        actualLine--;
-      }
-    }
-    while (actualLine >= 0) {
-      for (int x = 0; x < 10; ++x) {
-        this.grid[x][actualLine] = 0;
-      }
-      actualLine--;
-    }
+    this.clearCounter = 0;
+    this.clearingLinesToKeep = linesToKeep;
   }
 
   private void tryRotate(boolean clockwise) {
