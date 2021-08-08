@@ -237,6 +237,85 @@ func (tetris Tetris) IsOverlayValid() bool {
   return true
 }
 
+var WHITE = []int{ 240, 240, 240 }
+var CERULEAN = []int{ 0, 128, 255 };
+var GREEN = []int{ 0, 128, 50 };
+var ORANGE = []int{ 255, 128, 0 };
+var YELLOW = []int{ 255, 240, 0 };
+var RED = []int{ 255, 0, 30 };
+var PURPLE = []int{ 128, 0, 140 };
+var MAGENTA = []int{ 255, 40, 255 };
+var BLUE = []int{ 0, 0, 235 };
+var LIME = []int{ 50, 255, 0 };
+var BROWN = []int{ 128, 64, 0 };
+var TAN = []int{ 200, 150, 100 };
+var PINK = []int{ 255, 180, 225 };
+var CYAN = []int{ 0, 255, 255 };
+
+func (tetris Tetris) GetCurrentColors() [][]int {
+
+  var colorA []int
+  var colorB []int
+  
+  switch (tetris.linesCleared / 10) % 10 {
+  case 0:
+    colorA = CERULEAN
+    colorB = GREEN
+  case 1:
+    colorA = ORANGE
+    colorB = YELLOW
+  case 2:
+    colorA = RED
+    colorB = PURPLE
+  case 3:
+    colorA = BLUE
+    colorB = MAGENTA
+  case 4:
+    colorA = GREEN
+    colorB = LIME
+  case 5:
+    colorA = BROWN
+    colorB = TAN
+  case 6:
+    colorA = PINK
+    colorB = YELLOW
+  case 7:
+    colorA = GREEN
+    colorB = PURPLE
+  case 8:
+    colorA = BLUE
+    colorB = CYAN
+  case 9:
+    colorA = ORANGE
+    colorB = RED
+  }
+  colors := make([][]int, 4)
+  colors[0] = nil
+  colors[1] = WHITE
+  colors[2] = colorA
+  colors[3] = colorB
+
+  for i := 1; i <= 3; i++ {
+    color := colors[i]
+    newColor := make([]int, 9)
+    r := color[0]
+    g := color[1]
+    b := color[2]
+    newColor[0] = r
+    newColor[1] = g
+    newColor[2] = b
+    newColor[3] = 255 - (255 - r) * 2 / 3
+    newColor[4] = 255 - (255 - g) * 2 / 3
+    newColor[5] = 255 - (255 - b) * 2 / 3
+    newColor[6] = r * 2 / 3
+    newColor[7] = g * 2 / 3
+    newColor[8] = b * 2 / 3
+    colors[i] = newColor
+  }
+
+  return colors
+}
+
 func (tetris *Tetris) Render(rend *GameRenderer) {
   rend.Fill(40, 40, 40)
   var tileSize int32 = 20
@@ -246,10 +325,7 @@ func (tetris *Tetris) Render(rend *GameRenderer) {
   var boardTop int32 = (int32(rend.height) - boardHeight) / 2
   rend.Rectangle(boardLeft, boardTop, boardWidth, boardHeight, 0, 0, 0)
 
-  color1 := []uint32 { 255, 255, 255 }
-  color2 := []uint32 { 0, 128, 255 }
-  color3 := []uint32 { 0, 128, 40 }
-  var color []uint32
+  colors := tetris.GetCurrentColors()
   for y := 0; y < 20; y++ {
     for x := 0; x < 10; x++ {
       colorId := tetris.grid[x][y]
@@ -261,16 +337,12 @@ func (tetris *Tetris) Render(rend *GameRenderer) {
         }
       }
       if colorId > 0 {
-        if colorId == 1 {
-          color = color1
-        } else if colorId == 2 {
-          color = color2
-        } else {
-          color = color3
-        }
+        color := colors[colorId]
         var left int32 = int32(x) * tileSize + boardLeft
         var top int32 = int32(y) * tileSize + boardTop
-        rend.Rectangle(left, top, tileSize, tileSize, color[0], color[1], color[2])
+        rend.Rectangle(left, top, tileSize, tileSize, uint32(color[6]), uint32(color[7]), uint32(color[8]))
+        rend.Rectangle(left, top, tileSize - 2, tileSize - 2, uint32(color[3]), uint32(color[4]), uint32(color[5]))
+        rend.Rectangle(left + 2, top + 2, tileSize - 4, tileSize - 4, uint32(color[0]), uint32(color[1]), uint32(color[2]))
       }
     }
   }
