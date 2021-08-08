@@ -13,7 +13,8 @@ type Tetris struct {
   overlayUsesTranspose bool
   fallCounter float64
   linesCleared int
-  clearingLines map[int]bool
+  linesToKeepForClear map[int]bool
+  clearCounter int
   fallPressed bool
 }
 
@@ -29,7 +30,7 @@ func (tetris *Tetris) Init() {
   tetris.overlay = nil
   tetris.fallCounter = 0
   tetris.linesCleared = 0
-  tetris.clearingLines = nil
+  tetris.linesToKeepForClear = nil
 }
 
 func createOverlayHelper(pieceId int) []int {
@@ -101,8 +102,48 @@ func createOverlay(pieceId int) [][]int {
 }
 
 func (tetris *Tetris) Update(events []string) {
-  if tetris.clearingLines != nil {
 
+  for _, e := range events {
+    switch e {
+    case "left:press":
+      if tetris.overlay != nil {
+        tetris.TryMoveOverlay(-1, 0)
+      }
+    case "right:press":
+      if tetris.overlay != nil {
+        tetris.TryMoveOverlay(1, 0)
+      }
+    case "space:press":
+      if tetris.overlay != nil {
+        tetris.RotateOverlay(false)
+      }
+    case "up:press":
+      if tetris.overlay != nil {
+        tetris.RotateOverlay(true)
+      }
+    case "down:press":
+      tetris.fallPressed = true
+    case "down:release":
+      tetris.fallPressed = false
+    }
+  }
+
+  if tetris.linesToKeepForClear != nil {
+    const clearCounterMax = 30
+    clearUpToX := 10 * tetris.clearCounter / clearCounterMax
+    for y := 0; y < 20; y++ {
+      if _, ok := tetris.linesToKeepForClear[y]; !ok {
+        for x := 0; x < clearUpToX; x++ {
+          tetris.grid[x][y] = 0
+        }
+      }
+    }
+    if tetris.clearCounter == clearCounterMax {
+      tetris.DropClearedLines()
+      tetris.linesToKeepForClear = nil
+    } else {
+      tetris.clearCounter++
+    }
   } else if tetris.overlay == nil {
     overlayId := rand.Intn(7)
     tetris.overlay = createOverlay(overlayId)
@@ -111,22 +152,6 @@ func (tetris *Tetris) Update(events []string) {
     tetris.overlayX = 3
     tetris.overlayY = 0
   } else {
-    for _, e := range events {
-      switch e {
-      case "left:press":
-        tetris.TryMoveOverlay(-1, 0)
-      case "right:press":
-        tetris.TryMoveOverlay(1, 0)
-      case "space:press":
-        tetris.RotateOverlay(false)
-      case "up:press":
-        tetris.RotateOverlay(true)
-      case "down:press":
-        tetris.fallPressed = true
-      case "down:release":
-        tetris.fallPressed = false
-      }
-    }
 
     if tetris.fallPressed {
       tetris.fallCounter -= 6.0
@@ -137,10 +162,52 @@ func (tetris *Tetris) Update(events []string) {
       if !tetris.TryMoveOverlay(0, 1) {
         tetris.FlattenOverlay()
         tetris.overlay = nil
+        tetris.DoClearLineCheck()
       }
     } else {
       tetris.fallCounter -= 1.0
     }
+  }
+}
+
+func (tetris *Tetris) DropClearedLines() {
+  actualLine := 19
+  for y := 19; y >= 0; y-- {
+    if _, ok := tetris.linesToKeepForClear[y]; ok {
+      for x := 0; x < 10; x++ {
+        tetris.grid[x][actualLine] = tetris.grid[x][y]
+      }
+      actualLine--
+    }
+  }
+
+  for actualLine >= 0 {
+    for x := 0; x < 10; x++ {
+      tetris.grid[x][actualLine] = 0
+    }
+    actualLine--
+    tetris.linesCleared++
+  }
+}
+
+func (tetris *Tetris) DoClearLineCheck() {
+  keepTheseLines := make(map[int]bool)
+  for y := 0; y < 20; y++ {
+    hasEmpty := false
+    for x := 0; x < 10; x++ {
+      if tetris.grid[x][y] == 0 {
+        hasEmpty = true
+        break
+      }
+    }
+    if hasEmpty {
+      keepTheseLines[y] = true
+    }
+  }
+
+  if len(keepTheseLines) < 20 {
+    tetris.linesToKeepForClear = keepTheseLines
+    tetris.clearCounter = 0
   }
 }
 
@@ -389,7 +456,7 @@ func main() {
 
   rand.Seed(time.Now().UTC().UnixNano())
   rend := GameRenderer{surface, width, height}
-  tetris := Tetris{nil, nil, 0, 0, false, 0, 0, nil, false}
+  tetris := Tetris{nil, nil, 0, 0, false, 0, 0, nil, 0, false}
   tetris.Init()
   fmt.Println(tetris.fallCounter)
 
