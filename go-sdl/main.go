@@ -315,8 +315,8 @@ func main() {
     panic(err)
   }
 
+  rand.Seed(time.Now().UTC().UnixNano())
   rend := GameRenderer{surface, width, height}
-
   tetris := Tetris{nil, nil, 0, 0, false, 0, 0, nil, false}
   tetris.Init()
   fmt.Println(tetris.fallCounter)
